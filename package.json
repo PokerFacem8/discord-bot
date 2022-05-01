@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "start": "node bot.js",
+    "devStart": "nodemon bot.js"
+  },
+  "dependencies": {
+    "discord.js": "^13.6.0",
+    "dotenv": "^16.0.0",
+    "firebase": "^9.7.0",
+    "nodemon": "^2.0.16",
+    "ytdl-core": "^4.11.0"
+  }
+}
