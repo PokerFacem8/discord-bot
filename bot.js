@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const { Client, Intents } = require('discord.js');
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_VOICE_STATES]});
@@ -29,6 +28,12 @@ client.on("messageCreate", (message) => {
                 break;
             case "play":
                 utils.musicPlayer(message);
+                break;
+            case "stop":
+                utils.stopSong(message);
+                break;
+            case "skip":
+                utils.skipSong(message);
                 break;
             case "help":
                 message.channel.send("This is a help message");
