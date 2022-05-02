@@ -1,8 +1,10 @@
 
 require('dotenv').config();
 const { Client, Intents } = require('discord.js');
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_VOICE_STATES]});
 const utils = require('./utils.js');
+
+
 
 client.on("ready", () => {
     console.log("Loggend in as "+ client.user.tag + "!");
@@ -26,7 +28,8 @@ client.on("messageCreate", (message) => {
                 utils.purgeChat(message);
                 break;
             case "play":
-                utils.playMusic(message);
+                utils.musicPlayer(message);
+                break;
             case "help":
                 message.channel.send("This is a help message");
                 break;
@@ -37,7 +40,7 @@ client.on("messageCreate", (message) => {
 
 //TODO: Get the user who deleted the message and send a message to the channel
 //Event: delete message
-client.on("messageDelete", async (message) => {
+/*client.on("messageDelete", async (message) => {
     
     //Get Logs
     var messageDeleteLog = await message.guild.fetchAuditLogs().then(logs => logs.entries.filter(e => e.action === 'MESSAGE_DELETE').sort((a, b) => b.createdAt - a.createdAt).first());
@@ -50,6 +53,6 @@ client.on("messageDelete", async (message) => {
     }
     
     message.channel.send("This dickhead (" + messageDeleteLog.executor.tag + ") deleted the following message: " + message.content);      
-});
+});*/
 
 client.login(process.env.BOT_TOKEN);
