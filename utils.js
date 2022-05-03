@@ -56,6 +56,9 @@ function music(message){
         case "clear":
             clearQueue(message);
             break;
+        case "shuffle":
+            shuffleQueue(message);
+            break;
     };
 }
 
@@ -356,6 +359,39 @@ function clearQueue(message){
         //Clear the queue
         songsQueue.get(message.guild.id).songs = [];
         message.channel.send("The queue has been cleared!");
+}
+
+/**
+ * Shuffle the queue
+ * @param {*} message 
+ * @returns 
+ */
+function shuffleQueue(message){
+
+    //Get Voice Channel
+    const voiceChannel = message.member.voice.channel;
+
+    //Check if user is in a voice channel
+    if(!voiceChannel)
+        return message.channel.send("You need to be in a voice channel to use this command!");
+
+    //Get the queue
+    const queue = songsQueue.get(message.guild.id);
+
+    //Check if the queue is undefined
+    if(!queue)
+        return message.channel.send("There are no songs in the queue!");
+
+    //Get the first song
+    const firstSong = queue.songs.shift();
+
+    //Shuffle the queue
+    queue.songs.sort(() => Math.random() - 0.5);
+
+    //Add the first song back
+    queue.songs.unshift(firstSong);
+
+    message.channel.send("The queue has been shuffled!");
 }
 
 module.exports = {
