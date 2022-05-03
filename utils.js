@@ -7,6 +7,9 @@ const discordVoice = require("@discordjs/voice");
 //Songs Queue
 var songsQueue = new Map();
 
+//Songs Queue Max Number
+var songsQueueMaxNumber = 10;
+
 //Create Audio Player
 const player = discordVoice.createAudioPlayer();
 
@@ -30,6 +33,33 @@ function purgeChat(message){
 }
 
 /**
+ * Music Command Handler
+ * @param {*} message 
+ */
+function music(message){
+
+    var option = message.content.split(" ")[2];
+
+    switch(option){
+        case "play":
+            musicPlayer(message);
+            break;
+        case "stop":
+            stopSong(message);
+            break;
+        case "skip":
+            skipSong(message);
+            break;
+        case "list":
+            listSongs(message);
+            break;
+        case "clear":
+            clearQueue(message);
+            break;
+    };
+}
+
+/**
  * Play a song from a youtube link
  * @param {*} message 
  * @returns 
@@ -37,7 +67,7 @@ function purgeChat(message){
 function musicPlayer(message){
     
     //Get the link
-    const link = message.content.split(" ")[2];
+    const link = message.content.split(" ")[3];
 
     //Get Voice Channel
     const voiceChannel = message.member.voice.channel;
@@ -56,7 +86,7 @@ function musicPlayer(message){
         //Check if the link is valid
         if(!link.includes("youtube.com") && !link.includes("youtu.be"))
             return message.channel.send("Please give me a valid youtube link!");
-        
+
         //Get the info of the song
         ytdlInfo.getInfo(link).then(info => {
 
@@ -106,12 +136,17 @@ function musicPlayer(message){
                     return message.channel.send(err);
                 }
             } else {
+
+                //Check if number of songs in the queue is less than the max number
+                if(guildQueue.songs.length == songsQueueMaxNumber)
+                    return message.channel.send("The queue is full!");
+
                 guildQueue.songs.push(song);
 
                 //Check if music is playing
-                if(!player.state.status == "playing")
+                /*if(!player.state.status == "playing")
                     //Play the song
-                    playSong(message.guild, queueContruct.songs[0]);
+                    playSong(message.guild, queueContruct.songs[0]);*/
                 
                 return message.channel.send(`${song.title} has been added to the queue!`);
             }
@@ -271,16 +306,63 @@ function skipSong(message){
     }
 }
 
-module.exports = {
-    purgeChat,
-    musicPlayer,
-    stopSong,
-    skipSong
+/**
+ * List the songs in the queue
+ * @param {*} message 
+ * @returns 
+ */
+function listSongs(message){
+
+    //Get Voice Channel
+    const voiceChannel = message.member.voice.channel;
+
+    //Check if user is in a voice channel
+    if(!voiceChannel)
+        return message.channel.send("You need to be in a voice channel to use this command!");
+
+    //Get the queue
+    const queue = songsQueue.get(message.guild.id);
+
+    //Check if the queue is undefined
+    if(!queue)
+        return message.channel.send("There are no songs in the queue!");
+
+    var list = "```ini\nQueue: \n" + `${queue.songs.map((song, index) => `${(index + 1)}-[${song.title}]`).join('\n')}` + "```";
+
+    //Send the embed
+    message.channel.send(list);
 }
 
+/**
+ * Clear the queue
+ * @param {*} message 
+ */
+function clearQueue(message){
+    
+        //Get Voice Channel
+        const voiceChannel = message.member.voice.channel;
+    
+        //Check if user is in a voice channel
+        if(!voiceChannel)
+            return message.channel.send("You need to be in a voice channel to use this command!");
+    
+        //Get the queue
+        const queue = songsQueue.get(message.guild.id);
+
+        //Check if the queue is undefined
+        if(!queue)
+            return message.channel.send("There are no songs in the queue!");
+
+        //Clear the queue
+        songsQueue.get(message.guild.id).songs = [];
+        message.channel.send("The queue has been cleared!");
+}
+
+module.exports = {
+    purgeChat,
+    music 
+}
 
 //TODO:
-//Limite number of songs in the queue
 //Add a shuffle queue
-//Clear the queue
-//List the queue
+//Add Currency and Store/Casino

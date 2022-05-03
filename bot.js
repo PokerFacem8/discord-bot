@@ -26,19 +26,13 @@ client.on("messageCreate", (message) => {
             case "purge":
                 utils.purgeChat(message);
                 break;
-            case "play":
-                utils.musicPlayer(message);
-                break;
-            case "stop":
-                utils.stopSong(message);
-                break;
-            case "skip":
-                utils.skipSong(message);
+            case "music":
+                utils.music(message);
                 break;
             case "help":
                 message.channel.send("This is a help message");
                 break;
-        }
+        };
     }
 });
 
