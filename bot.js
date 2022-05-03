@@ -2,6 +2,7 @@ require('dotenv').config();
 const { Client, Intents } = require('discord.js');
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_VOICE_STATES]});
 const utils = require('./utils.js');
+const roles = require('./roles-manager.js');
 
 
 
@@ -29,11 +30,23 @@ client.on("messageCreate", (message) => {
             case "music":
                 utils.music(message);
                 break;
+            case "roles":
+                roles.menu(message);
+                break;
             case "help":
                 message.channel.send("This is a help message");
                 break;
         };
     }
+});
+
+//Event: When user joins the server
+client.on('guildMemberAdd', member => {
+    //Get Starter Role
+    let roleName = roles.getStarterRole();
+
+    //Add the starter role
+    member.roles.add(member.guild.roles.cache.find(role => role.name === roleName));
 });
 
 

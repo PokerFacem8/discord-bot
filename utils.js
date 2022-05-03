@@ -217,14 +217,6 @@ function playSong(guild, song){
     player.play(resource);
 
     guildQueue.textChannel.send(`Start playing: **${song.title}**`);
-
-    //Debugging
-    /*guildQueue.connection.on('stateChange', (oldState, newState) => {
-	    console.log(`Connection transitioned from ${oldState.status} to ${newState.status}`);
-    });
-    player.on('stateChange', (oldState, newState) => {
-	    console.log(`Audio player transitioned from ${oldState.status} to ${newState.status}`);
-    });*/
 }
 
 //Events: When there is an error
@@ -236,6 +228,11 @@ player.on('error', (error) => {
 player.on('finish', () => {
     guildQueue.songs.shift();
     playSong(guild, guildQueue.songs[0]);
+});
+
+//Event: When the player state changes
+player.on('stateChange', (oldState, newState) => {
+    console.log(`Audio player transitioned from ${oldState.status} to ${newState.status}`);
 });
 
 /**
@@ -398,7 +395,3 @@ module.exports = {
     purgeChat,
     music 
 }
-
-//TODO:
-//Add a shuffle queue
-//Add Currency and Store/Casino
