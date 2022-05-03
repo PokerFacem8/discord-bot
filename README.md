@@ -1,9 +1,18 @@
 # discord-bot
 Discord Bot to manage servers.
 
-#Core Functionalities:
+### Core Functionalities
 
-1) Music Player
-2) Purge Chat
-3) Roles Manager
-4) Users Manager
+This bot....
+
+#### Purge Chat
+
+#### Music Player
+
+#### Roles Manager
+
+#### Users Manager
+
+#### Extras
+
+### How to Setup
