@@ -50,69 +50,101 @@ function musicPlayer(message){
     if(!voiceChannel)
         return message.channel.send("You need to be in a voice channel to use this command!");
 
-    //Check if the link is valid
-    if(!link || (!link.includes("youtube.com") && !link.includes("youtu.be")))
-        return message.channel.send("Please give me a valid youtube link!");
-    
-    //Get the info of the song
-    ytdlInfo.getInfo(link).then(info => {
+    //Check if there is a link
+    if(link){
 
-        //Create song object
-        const song = {
-            source: link,
-            title: info.items[0].title
-        };
+        //Check if the link is valid
+        if(!link.includes("youtube.com") && !link.includes("youtu.be"))
+            return message.channel.send("Please give me a valid youtube link!");
+        
+        //Get the info of the song
+        ytdlInfo.getInfo(link).then(info => {
 
-        //Get server queue
-        const guildQueue = songsQueue.get(message.guild.id);
+            //Create song object
+            const song = {
+                source: link,
+                title: info.items[0].title
+            };
+
+            //Get server queue
+            const guildQueue = songsQueue.get(message.guild.id);
+
+            //Check if the server queue is undefined
+            if (!guildQueue) {
+
+                //Create a new queue
+                const queueContruct = {
+                    textChannel: message.channel,
+                    voiceChannel: voiceChannel,
+                    connection: null,
+                    songs: [],
+                    volume: 5,
+                    playing: true
+                };
+            
+                songsQueue.set(message.guild.id, queueContruct);
+
+                queueContruct.songs.push(song);
+
+                try {
+                    
+                    const connection = discordVoice.joinVoiceChannel(
+                    {
+                        channelId: message.member.voice.channel.id,
+                        guildId: message.guild.id,
+                        adapterCreator: message.guild.voiceAdapterCreator
+                    });
+
+                    queueContruct.connection = connection;
+
+                    //Play the song
+                    playSong(message.guild, queueContruct.songs[0]);
+
+                } catch (err) {
+                    console.log(err);
+                    songsQueue.delete(message.guild.id);
+                    return message.channel.send(err);
+                }
+            } else {
+                guildQueue.songs.push(song);
+
+                //Check if music is playing
+                if(!player.state.status == "playing")
+                    //Play the song
+                    playSong(message.guild, queueContruct.songs[0]);
+                
+                return message.channel.send(`${song.title} has been added to the queue!`);
+            }
+        });
+    }else{
+        //Check if bot is already playing music
+        if(message.guild.me.voice.channel)
+            return message.channel.send("I'm already in a voice channel!");
 
         //Check if the server queue is undefined
-        if (!guildQueue) {
+        if (!songsQueue.get(message.guild.id))
+            return message.channel.send("There are no songs in the queue!");
 
-            //Create a new queue
-            const queueContruct = {
-                textChannel: message.channel,
-                voiceChannel: voiceChannel,
-                connection: null,
-                songs: [],
-                volume: 5,
-                playing: true
-            };
-        
-            songsQueue.set(message.guild.id, queueContruct);
-
-            queueContruct.songs.push(song);
-
-            try {
+        try {
                 
-                const connection = discordVoice.joinVoiceChannel(
-                {
-                    channelId: message.member.voice.channel.id,
-                    guildId: message.guild.id,
-                    adapterCreator: message.guild.voiceAdapterCreator
-                });
+            const connection = discordVoice.joinVoiceChannel(
+            {
+                channelId: message.member.voice.channel.id,
+                guildId: message.guild.id,
+                adapterCreator: message.guild.voiceAdapterCreator
+            });
 
-                queueContruct.connection = connection;
+            songsQueue.get(message.guild.id).connection = connection;
 
-                //Play the song
-                playSong(message.guild, queueContruct.songs[0]);
+            //Play the first song in the queue
+            playSong(message.guild, songsQueue.get(message.guild.id).songs[0]);
 
-            } catch (err) {
-                console.log(err);
-                songsQueue.delete(message.guild.id);
-                return message.channel.send(err);
-            }
-        } else {
-            guildQueue.songs.push(song);
-
-            //Check if music is playing
-            if(!player.state.status == "playing")
-                //Play the song
-                playSong(message.guild, queueContruct.songs[0]);
-            
-            return message.channel.send(`${song.title} has been added to the queue!`);
+        } catch (err) {
+            console.log(err);
+            songsQueue.delete(message.guild.id);
+            return message.channel.send(err);
         }
-    });
+    }
 }
 
 /**
@@ -182,21 +214,24 @@ function stopSong(message){
     if(!voiceChannel)
         return message.channel.send("You need to be in a voice channel to use this command!");
 
+    //Check if bot is in a voice channel
+    if(!message.guild.me.voice.channel)
+        return message.channel.send("I'm not in a voice channel!");
+    
     //Check if music is playing
     if(!player.state.status == "playing")
         return message.channel.send("There is no song playing!");
-
-    //Get Guild Queue
-    var guildQueue = songsQueue.get(message.guild.id);
         
     //Stop the song
     player.stop();
 
+    //Remove the song from the queue
+    songsQueue.get(message.guild.id).songs.shift();
+
     //Leave the voice channel
     discordVoice.getVoiceConnection(message.guild.id).disconnect();
-    guildQueue.connection.destroy();
-
-    guildQueue.textChannel.send("The song has been stopped!");
+    songsQueue.get(message.guild.id).connection.destroy();
+    songsQueue.get(message.guild.id).textChannel.send("The song has been stopped!");
 }
 
 /**
@@ -213,19 +248,27 @@ function skipSong(message){
     if(!voiceChannel)
         return message.channel.send("You need to be in a voice channel to use this command!");
 
+    //Check if bot is in a voice channel
+    if(!message.guild.me.voice.channel)
+        return message.channel.send("I'm not in a voice channel!");
+
     //Check if music is playing
     if(!player.state.status == "playing")
         return message.channel.send("There is no song playing!");
 
+    //Remove the song from the queue
+    songsQueue.get(message.guild.id).songs.shift();
+    
     //Get next song
-    const nextSong = songsQueue.get(message.guild.id).songs[1];
+    const nextSong = songsQueue.get(message.guild.id).songs[0];
 
     //Check if there is a next song
-    if(nextSong == undefined)
+    if(nextSong == undefined){
         return message.channel.send("There is no next song!");
-
-    //Skip the song
-    playSong(message.guild, nextSong);
+    }else{
+        //Skip the song
+        playSong(message.guild, nextSong);
+    }
 }
 
 module.exports = {
@@ -234,3 +277,10 @@ module.exports = {
     stopSong,
     skipSong
 }
+
+
+//TODO:
+//Limite number of songs in the queue
+//Add a shuffle queue
+//Clear the queue
+//List the queue
