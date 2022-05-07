@@ -3,12 +3,38 @@ const { Client, Intents } = require('discord.js');
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_VOICE_STATES]});
 const utils = require('./utils.js');
 const roles = require('./roles-manager.js');
-
+const users = require('./users-manager.js');
+const mongodb = require('./mongo-manager.js');
 
 
 client.on("ready", () => {
     console.log("Loggend in as "+ client.user.tag + "!");
 });
+
+
+//Event: Join a server
+client.on('guildCreate', function(guild) {
+    //Message
+    guild.systemChannel.send(`Hello, I'm ${client.user.tag}. Thanks for inviting me, here are a list of all my commands! :alien:`);
+
+    //Check if the server is already in the database
+    mongodb.getServer(guild.id, (server) => {
+        if (server){
+            //Clear the server
+            mongodb.clearServerUsers(guild.id, () => {
+                //Add the Users
+                users.loadUsers(guild);
+            });
+        } else {
+            //Add Server to the database and load all users
+            mongodb.addServer(guild.id, ()=>{
+                //Add the Users
+                users.loadUsers(guild);
+            });
+        }
+    });
+});
+  
 
 //Event: create message
 client.on("messageCreate", (message) => {
@@ -32,6 +58,9 @@ client.on("messageCreate", (message) => {
                 break;
             case "roles":
                 roles.menu(message);
+                break;
+            case "users":
+                users.menu(message);
                 break;
             case "help":
                 message.channel.send("This is a help message");
