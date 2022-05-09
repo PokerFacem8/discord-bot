@@ -1,16 +1,16 @@
 require('dotenv').config();
-const { Client, Intents } = require('discord.js');
+const { Client, Intents, MessageEmbed } = require('discord.js');
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_VOICE_STATES]});
 const utils = require('./utils.js');
 const roles = require('./roles-manager.js');
 const users = require('./users-manager.js');
 const mongodb = require('./mongo-manager.js');
+const games = require('./games-manager.js');
 
-
+//Load the bot
 client.on("ready", () => {
     console.log("Loggend in as "+ client.user.tag + "!");
 });
-
 
 //Event: Join a server
 client.on('guildCreate', function(guild) {
@@ -34,7 +34,6 @@ client.on('guildCreate', function(guild) {
         }
     });
 });
-  
 
 //Event: create message
 client.on("messageCreate", (message) => {
@@ -47,9 +46,6 @@ client.on("messageCreate", (message) => {
 
         //Check if the option is a command
         switch(option){
-            case "ping":
-                message.channel.send("Pong!");
-                break;
             case "purge":
                 utils.purgeChat(message);
                 break;
@@ -62,8 +58,22 @@ client.on("messageCreate", (message) => {
             case "users":
                 users.menu(message);
                 break;
-            case "help":
-                message.channel.send("This is a help message");
+            case "games":
+                games.menu(message, MessageEmbed);
+                break;
+            case "help":               
+                //Create the embed to specify each command
+                var embed = new MessageEmbed()
+                    .setTitle("List of Commands")
+                    .setDescription("Here is a list of commands that you can use!")
+                    .addField("`purge`", "Purge the chat")
+                    .addField("`music`", "Play music in the voice channel")
+                    .addField("`roles`", "Manage roles")
+                    .addField("`users`", "Manage users")
+                    .addField("`games`", "Play games")
+                    .setColor("#0099ff")
+                    .setTimestamp();
+                message.channel.send({embed});
                 break;
         };
     }
@@ -76,24 +86,15 @@ client.on('guildMemberAdd', member => {
 
     //Add the starter role
     member.roles.add(member.guild.roles.cache.find(role => role.name === roleName));
+
+    //Check if the user is in the database
+    mongodb.getUser(member.id, member.guild.id, (user) => {
+        //If the user is not in the database
+        if (!user){
+            //Add the user to the server
+            mongodb.addUser(member.id, member.guild.id);
+        }
+    });
 });
-
-
-//TODO: Get the user who deleted the message and send a message to the channel
-//Event: delete message
-/*client.on("messageDelete", async (message) => {
-    
-    //Get Logs
-    var messageDeleteLog = await message.guild.fetchAuditLogs().then(logs => logs.entries.filter(e => e.action === 'MESSAGE_DELETE').sort((a, b) => b.createdAt - a.createdAt).first());
-
-    let user = ""
-    if (messageDeleteLog.extra.channel.id === message.channel.id && (messageDeleteLog.target.id === message.author.id) && (messageDeleteLog.createdTimestamp > (Date.now() - 5000)) && (messageDeleteLog.extra.count >= 1)) {
-        user = messageDeleteLog.executor.username
-    }else { 
-        user = message.author.username
-    }
-    
-    message.channel.send("This dickhead (" + messageDeleteLog.executor.tag + ") deleted the following message: " + message.content);      
-});*/
 
 client.login(process.env.BOT_TOKEN);

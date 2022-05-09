@@ -106,7 +106,7 @@ function addUser(user, server) {
  * @param {*} server 
  * @param {*} callback 
  */
-function getUserFromServer(id, server, callback) {
+function getUser(id, server, callback) {
     MongoClient.connect(url, { useNewUrlParser: true }, (err, client) => {
         if (err) {
             console.log(err);
@@ -125,12 +125,55 @@ function getUserFromServer(id, server, callback) {
     });
 }
 
+/**
+ * Update a user in a specific server
+ * @param {*} user 
+ * @param {*} server 
+ */
+function updateUser(user, server) {
+    MongoClient.connect(url, { useNewUrlParser: true }, (err, client) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        const db = client.db('discord-data');
+        const collection = db.collection('servers');
+        collection.updateOne({ id: server }, { $set: { users: user } }, (err, result) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            console.log(`User ${user} updated in server ${server}`);
+            client.close(); 
+        });
+    });
+}
 
-
+function removeUser(user, server) {
+    MongoClient.connect(url, { useNewUrlParser: true }, (err, client) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        const db = client.db('discord-data');
+        const collection = db.collection('servers');
+        collection.updateOne({ id: server }, { $pull: { users: { id: user } } }, (err, result) => {
+            if (err) {
+                console.log(err);
+                return;
+            }  
+            console.log(`User ${user} removed from server ${server}`);
+            client.close();
+        });
+    });
+}
+            
 module.exports = {
     addServer,
     getServer,
     clearServerUsers,
     addUser,
-    getUserFromServer
+    getUser,
+    updateUser,
+    removeUser
 }

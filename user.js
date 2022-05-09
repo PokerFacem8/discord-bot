@@ -5,7 +5,7 @@ class DiscordUser {
         this.username = username;
         this.bot = isBot; 
         this.created_at = createdAt;
-        this.currrency = 0;
+        this.currrency = 50.00;
     }
 
     //Get the user's currency

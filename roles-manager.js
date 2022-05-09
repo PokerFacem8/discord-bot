@@ -17,6 +17,7 @@ function menu(message) {
             break;
         case "starter":
             setStarterRole(message);
+            break;
     };
 }
 
