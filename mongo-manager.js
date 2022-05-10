@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { MongoClient } = require('mongodb');
 
+//MongoDB connection url
 const url = process.env.MONGO_URL;
 
 
@@ -53,6 +54,31 @@ function getServer(id, callback) {
 }
 
 /**
+ * Remove a server from the database
+ * @param {*} id 
+ * @param {*} callback 
+ */
+function removeServer(id, callback) {
+    MongoClient.connect(url, { useNewUrlParser: true }, (err, client) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        const db = client.db('discord-data');
+        const collection = db.collection('servers');
+        collection.deleteOne({ id: id }, (err, result) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            console.log(`Server ${id} removed`);
+            client.close();
+            callback();
+        });
+    });
+}
+
+/**
  * Clear the all the users from the server
  * @param {*} id 
  * @param {*} callback 
@@ -81,7 +107,7 @@ function clearServerUsers(id, callback) {
  * @param {*} user 
  * @param {*} server 
  */
-function addUser(user, server) {
+function addUser(user, server, callback) {
     MongoClient.connect(url, { useNewUrlParser: true }, (err, client) => {
         if (err) {
             console.log(err);
@@ -96,6 +122,7 @@ function addUser(user, server) {
             }
             console.log(`User ${user} added to server ${server}`);
             client.close();
+            callback();
         });
     });
 }
@@ -130,7 +157,7 @@ function getUser(id, server, callback) {
  * @param {*} user 
  * @param {*} server 
  */
-function updateUser(user, server) {
+function updateUser(user, server, callback) {
     MongoClient.connect(url, { useNewUrlParser: true }, (err, client) => {
         if (err) {
             console.log(err);
@@ -145,11 +172,18 @@ function updateUser(user, server) {
             }
             console.log(`User ${user} updated in server ${server}`);
             client.close(); 
+            callback();
         });
     });
 }
 
-function removeUser(user, server) {
+/**
+ * Remove a user from a specific server
+ * @param {*} user 
+ * @param {*} server 
+ * @param {*} callback 
+ */
+function removeUser(user, server, callback) {
     MongoClient.connect(url, { useNewUrlParser: true }, (err, client) => {
         if (err) {
             console.log(err);
@@ -164,6 +198,7 @@ function removeUser(user, server) {
             }  
             console.log(`User ${user} removed from server ${server}`);
             client.close();
+            callback();
         });
     });
 }
@@ -171,6 +206,7 @@ function removeUser(user, server) {
 module.exports = {
     addServer,
     getServer,
+    removeServer,
     clearServerUsers,
     addUser,
     getUser,
