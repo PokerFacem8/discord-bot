@@ -16,6 +16,8 @@ client.on("ready", () => {
 client.on('guildCreate', function(guild) {
     //Message
     guild.systemChannel.send(`Hello, I'm ${client.user.tag}. Thanks for inviting me, here are a list of all my commands! :alien:`);
+    //List commands
+    listCommands(guild.systemChannel);
 
     //Check if the server is already in the database
     mongodb.getServer(guild.id, (server) => {
@@ -62,18 +64,7 @@ client.on("messageCreate", (message) => {
                 games.menu(message, MessageEmbed);
                 break;
             case "help":               
-                //Create the embed to specify each command
-                var embed = new MessageEmbed()
-                    .setTitle("List of Commands")
-                    .setDescription("Here is a list of commands that you can use!")
-                    .addField("`purge`", "Purge the chat")
-                    .addField("`music`", "Play music in the voice channel")
-                    .addField("`roles`", "Manage roles")
-                    .addField("`users`", "Manage users")
-                    .addField("`games`", "Play games")
-                    .setColor("#0099ff")
-                    .setTimestamp();
-                message.channel.send({embed});
+                listCommands(message);
                 break;
         };
     }
@@ -96,5 +87,24 @@ client.on('guildMemberAdd', member => {
         }
     });
 });
+
+/**
+ * List all commands
+ * @param {*} message 
+ */
+function listCommands(message) {
+    //Create the embed to specify each command
+    var embed = new MessageEmbed()
+        .setTitle("List of Commands")
+        .setDescription("Here is a list of commands that you can use!")
+        .addField("`purge`", "Purge the chat")
+        .addField("`music`", "Play music in the voice channel")
+        .addField("`roles`", "Manage roles")
+        .addField("`users`", "Manage users")
+        .addField("`games`", "Play games")
+        .setColor("#0099ff")
+        .setTimestamp();
+    message.channel.send({embed});
+}
 
 client.login(process.env.BOT_TOKEN);
