@@ -14,25 +14,6 @@ var songsQueueMaxNumber = 10;
 const player = discordVoice.createAudioPlayer();
 
 /**
- * Purge a number of messages from a channel
- * @param {*} message 
- * @returns 
- */
-function purgeChat(message){
-
-    //Get the amount of messages to delete
-    var numberOfMessages = message.content.split(" ")[2];
-    //Check if the number of messages is a number
-    if(numberOfMessages != undefined && !isNaN(numberOfMessages) && numberOfMessages > 0 && numberOfMessages <= 100){
-        message.channel.bulkDelete(numberOfMessages);
-    }else{
-        message.channel.send("Stop being a dick and give me a number of messages to delete!");
-    }
-
-    return;
-}
-
-/**
  * Music Command Handler
  * @param {*} message 
  */
@@ -392,6 +373,5 @@ function shuffleQueue(message){
 }
 
 module.exports = {
-    purgeChat,
     music 
 }

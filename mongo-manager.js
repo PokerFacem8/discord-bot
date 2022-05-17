@@ -152,6 +152,29 @@ function getUser(id, server, callback) {
     });
 }
 
+function getUserByName(name, server, callback) {
+    MongoClient.connect(url, { useNewUrlParser: true }, (err, client) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        const db = client.db('discord-data');
+        const collection = db.collection('servers');
+        collection.findOne({ id: server }, (err, result) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            client.close();
+            callback(result.users.find(user => user.name === name));
+        });
+    });
+}
+
+
+
+
+
 /**
  * Update a user in a specific server
  * @param {*} user 

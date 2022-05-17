@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { Client, Intents, MessageEmbed } = require('discord.js');
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_VOICE_STATES]});
-const utils = require('./utils.js');
+const musicPlayer = require('./music-player.js');
 const roles = require('./roles-manager.js');
 const users = require('./users-manager.js');
 const mongodb = require('./mongo-manager.js');
@@ -49,10 +49,10 @@ client.on("messageCreate", (message) => {
         //Check if the option is a command
         switch(option){
             case "purge":
-                utils.purgeChat(message);
+                purgeChat(message);
                 break;
             case "music":
-                utils.music(message);
+                musicPlayer.music(message);
                 break;
             case "roles":
                 roles.menu(message);
@@ -105,6 +105,25 @@ function listCommands(message) {
         .setColor("#0099ff")
         .setTimestamp();
     message.channel.send({embed});
+}
+
+/**
+ * Purge a number of messages from a channel
+ * @param {*} message 
+ * @returns 
+ */
+ function purgeChat(message){
+
+    //Get the amount of messages to delete
+    var numberOfMessages = message.content.split(" ")[2];
+    //Check if the number of messages is a number
+    if(numberOfMessages != undefined && !isNaN(numberOfMessages) && numberOfMessages > 0 && numberOfMessages <= 100){
+        message.channel.bulkDelete(numberOfMessages);
+    }else{
+        message.channel.send("Stop being a dick and give me a number of messages to delete!");
+    }
+
+    return;
 }
 
 client.login(process.env.BOT_TOKEN);

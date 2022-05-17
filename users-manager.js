@@ -1,9 +1,6 @@
 const DiscordUser = require("./user.js");
 const mongodb = require("./mongo-manager.js");
 
-//List of all users from all guilds
-let guilds = new Map();
-
 /**
  * Load all users from the server to the database
  * @param {*} guild 
@@ -30,6 +27,15 @@ function menu(message) {
         case "list":
             listUsers(message);
             break;
+        case "kick":
+            kickUser(message);
+            break;
+        case "ban":
+            break;
+        case "mute":
+            break;
+        case "unmute":
+            break;
     };
 }
 
@@ -38,15 +44,33 @@ function menu(message) {
  * @param {*} message 
  */
 function listUsers(message) {
-    //Get the guildUsers list
-    const guildUsers = guilds.get(message.guild.id);
-
-    //Print the list of users
-    var list = "```ini\nUsers: \n" + `${guildUsers.map((user, index) => `${(index + 1)}-[${user.username}]`).join('\n')}` + "```";
-
-    //Send the embed
-    message.channel.send(list);
+    //Get the users from the database for the current server
+    mongodb.getUsers(message.guild.id, (users) => {
+        //Prepare the message
+        var list = "```ini\nUsers: \n" + `${users.map((user) => `[${user.username}]`).join('\n')}` + "```";
+    
+        //Send the message
+        message.channel.send(list);
+    });
 }
+
+function kickUser(message) {
+    //Get the user to kick
+    var username = message.content.split(" ")[3];
+
+    //Check if the user is in the list
+    mongodb.getUser(user, message.guild.id, (user) => {
+
+        //Check if the user exists
+        if (user) {
+            //Kick the user
+            message.guild.members.cache.find(member => member.id === user.id).kick();
+        }else{
+            message.channel.send(`The user ${user} does not exist`);
+        }
+
+
+
 
 module.exports = {
     loadUsers,
